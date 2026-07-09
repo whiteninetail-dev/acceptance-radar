@@ -1,0 +1,18 @@
+; 【設定用ファイルサンプル】
+; このファイルを config.ini にコピーして編集するか、setup.py から保存してください。
+; 若しくは、そのままmain.pyを立ち上げた場合、設定用のスクリプトが走ります。
+; 共有パスを使う場合は環境変数 AUTOMATION_CONFIG にフルパスを設定します。
+; urlの部分は”対象の厚生局のページ”を指定してください。
+; 作り直す際は config.ini をただ破棄してmain.pyから作り直す方が楽です。
+
+[kouseikyoku]
+prefecture = 群馬県
+bureau = 関東信越厚生局
+pattern = A
+url = https://kouseikyoku.mhlw.go.jp/kantoshinetsu/gyomu/bu_ka/gunma/kijun.html
+pdf_type = 医科
+target_categories = 新規・変更, 辞退
+search_terms = 病院名をここに
+download_folder = Downloaded_PDFs
+extracted_folder = Extracted_Pages
+backup_folder =

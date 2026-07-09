@@ -1,0 +1,23 @@
+# Python-generated files
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+
+# Virtual environments
+.venv
+
+# 認証情報（平文でログインID/パスワードを含む。実際に config.ini が存在。config.ini.example はテンプレートなので対象外）
+config.ini
+.env
+
+# 個人情報・生成データを含む出力物
+*.csv
+*.xlsx
+logs/
+Downloaded_PDFs/
+Extracted_Pages/
+state/
+previous_link_*.txt

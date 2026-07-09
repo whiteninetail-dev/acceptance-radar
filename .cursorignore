@@ -1,0 +1,16 @@
+# パスワードが入っている設定ファイル
+config.ini
+.env
+
+# 個人情報や大きなデータ（読み込ませるとAIが混乱するし危ない）
+*.csv
+*.xlsx
+logs/
+Downloaded_PDFs/
+Extracted_Pages/
+state/
+previous_link_*.txt
+
+# 実行環境そのもの（AIに読ませる必要がない）
+.venv/
+__pycache__/
