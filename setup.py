@@ -20,7 +20,7 @@ from config_loader import config_path, delete_target, load_targets, save_targets
 from pdf_facility_type import PDF_TYPES_WITH_HOME_NURSING
 
 PROJECT_DIR = Path(__file__).resolve().parent
-TASK_NAME = "KouseikyokuAutoCheck"
+TASK_NAME = "AcceptanceRadarCheck"
 CATEGORIES = ("新規・変更", "辞退")
 
 

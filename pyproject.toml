@@ -1,7 +1,7 @@
 [project]
-name = "kouseikyoku"
+name = "acceptance-radar"
 version = "0.1.0"
-description = "Add your description here"
+description = "全国の地方厚生局サイトを巡回し、施設基準の受理・辞退状況の新着を検知して該当施設のページを自動抽出するツール"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
