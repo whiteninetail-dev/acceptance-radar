@@ -114,7 +114,7 @@ schtasks /Create /TN "AcceptanceRadarCheck" /TR "cmd /c \"cd /d %CD% && uv run m
 ---
 
 ## 🗺 対応地域とサイト構造パターン
-地方厚生局ごとにウェブサイトの構造がバラバラなため、`kouseikyoku_patterns/` 以下にサイト構造ごとの解析ロジック（A〜H）を分けて実装しています。都道府県ごとの対応状況・使用パターンの詳細は `bureau_master.py` の `PREFECTURE_ENTRIES` を参照してください。
+地方厚生局ごとにウェブサイトの構造がバラバラなため、`kouseikyoku_patterns/` 以下にサイト構造ごとの解析ロジック（A〜G）を分けて実装しています。都道府県ごとの対応状況・使用パターンの詳細は `bureau_master.py` の `PREFECTURE_ENTRIES` を参照してください。
 
 | パターン | 地域 | 構造の特徴 |
 |---|---|---|
