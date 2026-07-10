@@ -42,6 +42,15 @@ def main():
         action="store_true",
         help="対話形式でプロファイルを選んで実行する",
     )
+    parser.add_argument(
+        "--batch",
+        "-b",
+        action="store_true",
+        help=(
+            "無人実行向けのバッチモード。設定不足時にダイアログを出さず、"
+            "結果報告ポップアップも出さずに即終了する（タスクスケジューラ用）"
+        ),
+    )
     args = parser.parse_args()
 
     if args.list:
@@ -56,7 +65,7 @@ def main():
             sys.exit(1)
         only_profile = picked or None
 
-    if not run_process(only_profile=only_profile):
+    if not run_process(only_profile=only_profile, batch=args.batch):
         sys.exit(1)
 
 

@@ -137,13 +137,19 @@ def prompt_and_run_setup(reason: str) -> bool:
     return False
 
 
-def ensure_kouseikyoku_config() -> list[dict] | None:
-    """設定（全プロファイル）を読み込む。不足時は setup へ誘導し、保存後に再読み込みする。"""
+def ensure_kouseikyoku_config(*, batch: bool = False) -> list[dict] | None:
+    """設定（全プロファイル）を読み込む。不足時は setup へ誘導し、保存後に再読み込みする。
+    batch=True の場合はダイアログを一切出さず、設定不足ならそのままエラー終了する
+    （タスクスケジューラ等の無人実行で、応答されないダイアログにより処理が
+    固まってしまうのを防ぐため）。"""
     ok, err = validate_targets()
     if ok:
         return sync_targets_from_master(load_targets())
 
     print(f"エラー: {err}")
+    if batch:
+        print("バッチモードのため、設定画面は起動せずに終了します。setup.py で設定してください。")
+        return None
     if not prompt_and_run_setup(err):
         return None
 

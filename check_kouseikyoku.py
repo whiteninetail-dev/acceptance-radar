@@ -5,6 +5,7 @@
 """
 
 import os
+from datetime import datetime
 
 import requests
 import tkinter as tk
@@ -58,7 +59,7 @@ def run_check_loop(cfg: dict, soup: BeautifulSoup | None, page_url: str) -> list
                 previous_link = f.read().strip()
         if current_link != previous_link:
             print(f"【結果】★★ 更新がありました！ ★★ ({category})")
-            result_text, _created_files = download_and_process_pdf(
+            success, result_text, _created_files = download_and_process_pdf(
                 current_info,
                 search_terms,
                 category,
@@ -67,6 +68,11 @@ def run_check_loop(cfg: dict, soup: BeautifulSoup | None, page_url: str) -> list
                 backup_folder,
             )
             all_results_text.append(f"--- {category} ---\n{result_text}")
+            if not success:
+                # ダウンロード/抽出に失敗した場合は「未処理」のまま残し、
+                # 次回実行時に同じ更新を再検知してリトライできるようにする。
+                print(f"「{category}」の処理に失敗したため、今回のリンクは保存しません（次回リトライします）。")
+                continue
         else:
             print(f"【結果】更新はありませんでした。 ({category})")
         with open(previous_link_file, "w", encoding="utf-8") as f:
@@ -79,7 +85,7 @@ def run_process_pattern_a(cfg: dict) -> str:
     page_url = cfg["url"]
     pattern_label = cfg.get("pattern", "A").upper()
     print(f"[パターン{pattern_label}] ページにアクセスしています: {page_url}")
-    response = requests.get(page_url, headers=DEFAULT_HEADERS)
+    response = requests.get(page_url, headers=DEFAULT_HEADERS, timeout=30)
     response.raise_for_status()
     response.encoding = response.apparent_encoding
     soup = BeautifulSoup(response.text, "html.parser")
@@ -97,8 +103,8 @@ def run_process_pattern_c(cfg: dict) -> str:
     return "\n\n".join(all_results_text)
 
 
-def _show_results_if_any(all_results_text: list[str]) -> None:
-    if not all_results_text:
+def _show_results_if_any(all_results_text: list[str], *, batch: bool = False) -> None:
+    if not all_results_text or batch:
         return
     final_message = "\n\n".join(all_results_text)
     root = tk.Tk()
@@ -125,6 +131,19 @@ def _run_one_target(target: dict) -> str:
     return ""
 
 
+def _write_log(summary: list[tuple[str, str]], started_at: datetime) -> None:
+    """実行結果を logs/update_history_YYYYMM.txt に追記する（監査・後追い確認用）。"""
+    log_dir = "logs"
+    os.makedirs(log_dir, exist_ok=True)
+    log_path = os.path.join(log_dir, f"update_history_{started_at.strftime('%Y%m')}.txt")
+    lines = [f"[{started_at.strftime('%Y-%m-%d %H:%M:%S')}] === 厚生局チェック実行 ==="]
+    for profile, outcome in summary:
+        lines.append(f"  ・{profile}: {outcome}")
+    lines.append("")
+    with open(log_path, "a", encoding="utf-8") as f:
+        f.write("\n".join(lines) + "\n")
+
+
 def list_profile_names() -> list[str]:
     """設定ウィザードを起動せず、config.ini にあるプロファイル名だけを返す。"""
     try:
@@ -133,12 +152,14 @@ def list_profile_names() -> list[str]:
         return []
 
 
-def run_process(only_profile: str | None = None) -> bool:
+def run_process(only_profile: str | None = None, *, batch: bool = False) -> bool:
     """厚生局サイトの更新チェック・PDF 取得・ページ抽出まで（メールは別プロジェクト）。
     config.ini 内の全プロファイルを順番にチェックする。1件のプロファイルで
     エラーが起きても、そこだけスキップして残りは続行する。
-    only_profile を指定すると、そのプロファイルだけを実行する。"""
-    targets = ensure_kouseikyoku_config()
+    only_profile を指定すると、そのプロファイルだけを実行する。
+    batch=True の場合、設定不足時のダイアログや結果報告ポップアップを出さない
+    （タスクスケジューラ等の無人実行向け）。"""
+    targets = ensure_kouseikyoku_config(batch=batch)
     if not targets:
         return False
 
@@ -150,8 +171,15 @@ def run_process(only_profile: str | None = None) -> bool:
             return False
         targets = matched
 
+    started_at = datetime.now()
+    print("############################################")
+    print(f"# 厚生局チェック開始: {started_at.strftime('%Y-%m-%d %H:%M:%S')}")
+    print(f"# 対象プロファイル数: {len(targets)}件")
+    print("############################################")
+
     all_results_text: list[str] = []
     any_success = False
+    summary: list[tuple[str, str]] = []  # (profile, 結果概要)
 
     for target in targets:
         profile = target.get("profile", "?")
@@ -173,10 +201,23 @@ def run_process(only_profile: str | None = None) -> bool:
             any_success = True
             if result_text:
                 all_results_text.append(f"■ {profile}\n{result_text}")
+                summary.append((profile, "更新あり（PDFダウンロード・抽出済み）"))
+            else:
+                summary.append((profile, "更新なし"))
         except requests.exceptions.RequestException as e:
             print(f"エラー: [{profile}] ページへのアクセスに失敗しました。 {e}")
+            summary.append((profile, f"エラー（アクセス失敗: {e}）"))
         except Exception as e:
             print(f"エラー: [{profile}] 予期しないエラーが発生しました。 {e}")
+            summary.append((profile, f"エラー（予期しない: {e}）"))
 
-    _show_results_if_any(all_results_text)
+    print("\n############################################")
+    print("# チェック結果サマリー")
+    print("############################################")
+    for profile, outcome in summary:
+        print(f"  ・{profile}: {outcome}")
+    print("############################################\n")
+
+    _write_log(summary, started_at)
+    _show_results_if_any(all_results_text, batch=batch)
     return any_success

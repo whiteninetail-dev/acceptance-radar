@@ -26,12 +26,15 @@ def download_and_process_pdf(
     extracted_folder,
     backup_folder,
 ):
+    """PDFをダウンロードして該当ページを抽出する。
+    戻り値は (success, message, created_files)。success が False の場合、
+    呼び出し側は「更新チェック済み」の記録を書き換えず、次回リトライできるようにする。"""
     pdf_url = pdf_info["link"]
     publication_date = pdf_info["date"] if pdf_info["date"] else "NODATE"
     created_files = []
     try:
         print(f"PDFをダウンロードしています: {pdf_url}")
-        response = requests.get(pdf_url, headers=DEFAULT_HEADERS)
+        response = requests.get(pdf_url, headers=DEFAULT_HEADERS, timeout=30)
         response.raise_for_status()
         pdf_content = response.content
         os.makedirs(download_folder, exist_ok=True)
@@ -109,8 +112,8 @@ def download_and_process_pdf(
             message += (
                 f"【見つかりませんでした】\nPDF内に「{'_'.join(search_terms)}」の記載はありませんでした。"
             )
-        return message, created_files
+        return True, message, created_files
     except Exception as e:
         error_message = f"エラー: PDFの処理中に問題が発生しました。\n{e}"
         print(error_message)
-        return error_message, []
+        return False, error_message, []

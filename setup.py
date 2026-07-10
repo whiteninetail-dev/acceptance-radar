@@ -9,6 +9,7 @@
 from __future__ import annotations
 
 import argparse
+import re
 import subprocess
 import sys
 import tkinter as tk
@@ -24,8 +25,9 @@ TASK_NAME = "AcceptanceRadarCheck"
 CATEGORIES = ("新規・変更", "辞退")
 
 
-def register_scheduled_task() -> tuple[bool, str]:
-    python_cmd = f'cd /d "{PROJECT_DIR}" && uv run main.py'
+def register_scheduled_task(start_time: str = "09:00") -> tuple[bool, str]:
+    # --batch: 無人実行中に応答されないダイアログが出て処理が固まるのを防ぐ
+    python_cmd = f'cd /d "{PROJECT_DIR}" && uv run main.py --batch'
     tr = f'cmd /c "{python_cmd}"'
     cmd = [
         "schtasks",
@@ -37,7 +39,7 @@ def register_scheduled_task() -> tuple[bool, str]:
         "/SC",
         "DAILY",
         "/ST",
-        "09:00",
+        start_time,
         "/F",
     ]
     result = subprocess.run(cmd, capture_output=True, text=True, encoding="cp932", errors="replace")
@@ -140,9 +142,15 @@ class SetupApp(tk.Tk):
         ttk.Button(btn_frame, text="このプロファイルを保存", command=self._save_current_profile).pack(
             side="left", padx=(0, 8)
         )
-        ttk.Button(btn_frame, text="タスクスケジューラ登録（全プロファイル共通）", command=self._register_task).pack(
-            side="left"
-        )
+
+        task_frame = ttk.Frame(right)
+        task_frame.pack(fill="x")
+        ttk.Label(task_frame, text="実行時刻:").pack(side="left")
+        self.task_time_var = tk.StringVar(value="09:00")
+        ttk.Entry(task_frame, textvariable=self.task_time_var, width=8).pack(side="left", padx=(4, 8))
+        ttk.Button(
+            task_frame, text="タスクスケジューラ登録（全プロファイル共通・毎日実行）", command=self._register_task
+        ).pack(side="left")
 
         ttk.Button(
             right,
@@ -313,9 +321,13 @@ class SetupApp(tk.Tk):
         messagebox.showinfo("保存完了", f"プロファイル「{name}」を保存しました。\n{config_path()}")
 
     def _register_task(self) -> None:
-        ok, msg = register_scheduled_task()
+        start_time = self.task_time_var.get().strip()
+        if not re.match(r"^([01]\d|2[0-3]):[0-5]\d$", start_time):
+            messagebox.showerror("エラー", "実行時刻は HH:MM（24時間表記）で入力してください。例: 09:00 / 21:30")
+            return
+        ok, msg = register_scheduled_task(start_time)
         if ok:
-            messagebox.showinfo("タスク登録", msg)
+            messagebox.showinfo("タスク登録", f"{msg}\n実行時刻: 毎日 {start_time}")
         else:
             messagebox.showerror("タスク登録", msg)
 
