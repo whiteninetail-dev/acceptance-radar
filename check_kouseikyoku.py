@@ -146,10 +146,7 @@ def _write_log(summary: list[tuple[str, str]], started_at: datetime) -> None:
 
 def list_profile_names() -> list[str]:
     """設定ウィザードを起動せず、config.ini にあるプロファイル名だけを返す。"""
-    try:
-        return [t.get("profile", "?") for t in load_targets()]
-    except FileNotFoundError:
-        return []
+    return [t.get("profile", "?") for t in load_targets()]
 
 
 def run_process(only_profile: str | None = None, *, batch: bool = False) -> bool:

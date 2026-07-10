@@ -90,8 +90,12 @@ def _legacy_profile_name(sec: configparser.SectionProxy) -> str:
 
 
 def load_targets() -> list[dict]:
-    """config.ini 内の全プロファイルを読み込む。"""
-    cp = _read_config()
+    """config.ini 内の全プロファイルを読み込む。ファイルが無ければ空リストを返す
+    （setup.py を初回起動する場合など、まだ config.ini が存在しないケースがあるため）。"""
+    try:
+        cp = _read_config()
+    except FileNotFoundError:
+        return []
     targets: list[dict] = []
 
     for section in cp.sections():
@@ -184,13 +188,10 @@ def sync_targets_from_master(targets: list[dict], *, write_back: bool = True) ->
 
 def validate_targets() -> tuple[bool, str]:
     """設定がチェック実行可能か検証する。"""
-    try:
-        targets = load_targets()
-    except FileNotFoundError as e:
-        return False, str(e)
+    targets = load_targets()
 
     if not targets:
-        return False, f"有効なプロファイルが1件もありません: {config_path()}"
+        return False, f"有効なプロファイルが1件もありません（設定ファイルが無いか空です）: {config_path()}"
 
     for target in targets:
         profile = target.get("profile", "?")

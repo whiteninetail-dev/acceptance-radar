@@ -13,6 +13,8 @@ from pdf_facility_type import PDF_TYPES_BASIC, PDF_TYPES_WITH_HOME_NURSING
 
 BASE = "https://kouseikyoku.mhlw.go.jp"
 
+# パターンB: 施設種別ごとにセクション、都道府県が列、1セルに新規・変更/失効が縦に並ぶ（近畿）
+KIJUN_B_KINKI = f"{BASE}/kinki/gyomu/gyomu/hoken_kikan/kijun_jurijoukyou.html"
 # パターンC: 入口ページ → カテゴリ別ページ（北海道）
 HUB_C_HOKKAIDO = f"{BASE}/hokkaido/iryo_shido/shisetsukijyun_iryoukikan.html"
 # パターンD: 1ページに掲載日ごとの表があり、県別行がカテゴリでグループ化される構造（東北）
@@ -25,9 +27,6 @@ KIJUN_F_TOKAIHOKURIKU = f"{BASE}/tokaihokuriku/newpage_00843.html"
 # パターンG: 都道府県ごとにセクション、カテゴリはセル内テキストに埋め込み（中国四国厚生局・中国地方）
 # 旧 chugoku/ 配下のURLは廃止され、chugokushikoku/ に統合されている点に注意。
 KIJUN_G_CHUGOKU = f"{BASE}/chugokushikoku/chousaka/kijunjuriichiran_shinkihenkou_shikkou_00001.html"
-# パターンB: 施設種別ごとにセクション、都道府県が列、1セルに新規・変更/失効が縦に並ぶ（近畿）
-KIJUN_B_KINKI = f"{BASE}/kinki/gyomu/gyomu/hoken_kikan/kijun_jurijoukyou.html"
-
 
 @dataclass(frozen=True)
 class PrefectureEntry:
