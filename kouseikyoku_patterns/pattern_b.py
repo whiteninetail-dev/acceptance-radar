@@ -1,5 +1,5 @@
 """
-パターンH: 近畿厚生局など「施設種別ごとにセクション（表）があり、
+パターンB: 近畿厚生局など「施設種別ごとにセクション（表）があり、
 都道府県が列、掲載日が行、1セル内に新規・変更／失効の両方が
 段落（<p>）として縦に並ぶ」構造。
 
@@ -53,7 +53,7 @@ def _prefecture_column_index(table, prefecture: str) -> int | None:
     return None
 
 
-def get_category_info_pattern_h(
+def get_category_info_pattern_b(
     soup: BeautifulSoup,
     category_name: str,
     page_url: str,
@@ -62,12 +62,12 @@ def get_category_info_pattern_h(
     prefecture: str,
 ) -> dict | None:
     if not prefecture:
-        print("エラー: パターンHには都道府県（prefecture）の指定が必要です。")
+        print("エラー: パターンBには都道府県（prefecture）の指定が必要です。")
         return None
 
     table = _find_section_table(soup, pdf_type)
     if table is None:
-        print(f"エラー: パターンHで「{pdf_type}」のセクションが見つかりませんでした。")
+        print(f"エラー: パターンBで「{pdf_type}」のセクションが見つかりませんでした。")
         return None
 
     col_idx = _prefecture_column_index(table, prefecture)

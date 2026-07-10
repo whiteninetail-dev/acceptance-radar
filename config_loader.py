@@ -18,6 +18,30 @@ LEGACY_SECTION = "kouseikyoku"
 DEFAULT_DOWNLOAD_FOLDER = "Downloaded_PDFs"
 DEFAULT_EXTRACTED_FOLDER = "Extracted_Pages"
 
+CONFIG_HEADER_COMMENT = """\
+; 【厚生局チェック 設定ファイル】
+; このファイルは setup.py（GUI）から自動生成されます。手動で編集することもできます。
+;
+; [kouseikyoku:プロファイル名] の形式で、施設×施設種別の組み合わせを何件でも登録できます。
+; プロファイル名は自由に付けられます（例: 〇〇病院_医科）。
+;
+; 各プロファイルの項目:
+;   prefecture       = 都道府県名（例: 埼玉県）
+;   bureau            = 厚生局名（prefecture から自動反映。通常は編集不要）
+;   pattern           = サイト構造パターン（同上、自動反映）
+;   url               = 対象厚生局ページ（同上、自動反映）
+;   pdf_type          = 医科 / 歯科 / 薬局 / 訪問看護
+;   target_categories = 新規・変更, 辞退（カンマ区切りで複数指定可）
+;   search_terms      = 検索キーワード（施設名など。カンマ区切りでAND指定）
+;   download_folder   = ダウンロード先フォルダ（通常は変更不要）
+;   extracted_folder  = 抽出PDF保存先フォルダ（通常は変更不要）
+;   backup_folder     = バックアップ先フォルダ（任意）
+;
+; 共有パスを使う場合は環境変数 AUTOMATION_CONFIG にこのファイルのフルパスを設定してください。
+; 作り直す場合は、このファイルを削除して setup.py（または main.py）を起動し直すのが簡単です。
+
+"""
+
 
 def config_path() -> Path:
     env = os.environ.get("AUTOMATION_CONFIG", "").strip()
@@ -113,6 +137,7 @@ def save_targets(targets: list[dict]) -> None:
         sec.setdefault("backup_folder", "")
 
     with open(path, "w", encoding="utf-8") as f:
+        f.write(CONFIG_HEADER_COMMENT)
         cp.write(f)
 
 
@@ -126,6 +151,7 @@ def delete_target(profile: str) -> None:
     if cp.has_section(section):
         cp.remove_section(section)
         with open(path, "w", encoding="utf-8") as f:
+            f.write(CONFIG_HEADER_COMMENT)
             cp.write(f)
 
 

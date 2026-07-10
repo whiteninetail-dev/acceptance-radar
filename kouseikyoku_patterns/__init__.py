@@ -1,12 +1,12 @@
 """厚生局サイト構造パターン別の HTML 解析。"""
 
 from kouseikyoku_patterns.pattern_a import get_category_info
+from kouseikyoku_patterns.pattern_b import get_category_info_pattern_b
 from kouseikyoku_patterns.pattern_c import fetch_category_info_pattern_c, get_category_info_pattern_c
 from kouseikyoku_patterns.pattern_d import get_category_info_pattern_d
 from kouseikyoku_patterns.pattern_e import fetch_category_info_pattern_e
 from kouseikyoku_patterns.pattern_f import get_category_info_pattern_f
 from kouseikyoku_patterns.pattern_g import get_category_info_pattern_g
-from kouseikyoku_patterns.pattern_h import get_category_info_pattern_h
 
 __all__ = [
     "get_category_info",
@@ -26,6 +26,10 @@ def get_category_info_for_pattern(
     p = (pattern or "A").strip().upper()
     if p == "A":
         return get_category_info(soup, category_name, page_url, pdf_type)
+    if p == "B":
+        return get_category_info_pattern_b(
+            soup, category_name, page_url, pdf_type, prefecture=prefecture
+        )
     if p == "C":
         return get_category_info_pattern_c(soup, category_name, page_url, pdf_type)
     if p == "D":
@@ -38,10 +42,6 @@ def get_category_info_for_pattern(
         )
     if p == "G":
         return get_category_info_pattern_g(
-            soup, category_name, page_url, pdf_type, prefecture=prefecture
-        )
-    if p == "H":
-        return get_category_info_pattern_h(
             soup, category_name, page_url, pdf_type, prefecture=prefecture
         )
     raise ValueError(f"未対応の pattern です: {pattern}")

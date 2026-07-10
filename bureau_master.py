@@ -25,15 +25,15 @@ KIJUN_F_TOKAIHOKURIKU = f"{BASE}/tokaihokuriku/newpage_00843.html"
 # パターンG: 都道府県ごとにセクション、カテゴリはセル内テキストに埋め込み（中国四国厚生局・中国地方）
 # 旧 chugoku/ 配下のURLは廃止され、chugokushikoku/ に統合されている点に注意。
 KIJUN_G_CHUGOKU = f"{BASE}/chugokushikoku/chousaka/kijunjuriichiran_shinkihenkou_shikkou_00001.html"
-# パターンH: 施設種別ごとにセクション、都道府県が列、1セルに新規・変更/失効が縦に並ぶ（近畿）
-KIJUN_H_KINKI = f"{BASE}/kinki/gyomu/gyomu/hoken_kikan/kijun_jurijoukyou.html"
+# パターンB: 施設種別ごとにセクション、都道府県が列、1セルに新規・変更/失効が縦に並ぶ（近畿）
+KIJUN_B_KINKI = f"{BASE}/kinki/gyomu/gyomu/hoken_kikan/kijun_jurijoukyou.html"
 
 
 @dataclass(frozen=True)
 class PrefectureEntry:
     prefecture: str
     bureau: str
-    pattern: str  # "A" | "C" | "D" | "E" | "F" | "G" | "H"
+    pattern: str  # "A" | "B" | "C" | "D" | "E" | "F" | "G"
     url: str
     region_slug: str
     pdf_types: tuple[str, ...] = PDF_TYPES_WITH_HOME_NURSING
@@ -102,9 +102,9 @@ def _entries() -> list[PrefectureEntry]:
     for pref in ("岐阜県", "静岡県", "愛知県", "三重県", "富山県", "石川県"):
         add(pref, "東海北陸厚生局", "F", KIJUN_F_TOKAIHOKURIKU, "tokaihokuriku")
 
-    # --- 近畿（パターンH: 施設種別ごとにセクション、都道府県が列。福井県も管轄はここ） ---
+    # --- 近畿（パターンB: 施設種別ごとにセクション、都道府県が列。福井県も管轄はここ） ---
     for pref in ("福井県", "滋賀県", "京都府", "大阪府", "兵庫県", "奈良県", "和歌山県"):
-        add(pref, "近畿厚生局", "H", KIJUN_H_KINKI, "kinki")
+        add(pref, "近畿厚生局", "B", KIJUN_B_KINKI, "kinki")
 
     # --- 中国（パターンG: 都道府県ごとにセクション、カテゴリはセル内テキストに埋め込み） ---
     # 厚生局名は「中国四国厚生局」に統合されているが、地域(region_slug)は従来通り chugoku のまま区別する。

@@ -120,14 +120,14 @@ def _show_results_if_any(all_results_text: list[str], *, batch: bool = False) ->
 def _run_one_target(target: dict) -> str:
     """1プロファイル分の処理を実行し、結果テキスト（更新が無ければ空文字）を返す。"""
     pattern = target.get("pattern", "A").upper()
-    if pattern in ("A", "D", "F", "G", "H"):
-        # D・F・G・H も取得方法（1ページ取得してソースを渡す）が A と同じで、
+    if pattern in ("A", "B", "D", "F", "G"):
+        # B・D・F・G も取得方法（1ページ取得してソースを渡す）が A と同じで、
         # ページ内の解析ロジックだけが異なる（get_category_info_for_pattern 側で分岐）。
         return run_process_pattern_a(target)
     if pattern in ("C", "E"):
         # E も取得方法（カテゴリごとに別URLを取りに行く）が C と同じ。
         return run_process_pattern_c(target)
-    print(f"エラー: 未対応の pattern です: {pattern}（A / C / D / E / F / G / H を指定してください）")
+    print(f"エラー: 未対応の pattern です: {pattern}（A / B / C / D / E / F / G を指定してください）")
     return ""
 
 

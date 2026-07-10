@@ -87,7 +87,7 @@ class SetupApp(tk.Tk):
         right = ttk.Frame(body)
         right.pack(side="left", fill="both", expand=True)
 
-        ttk.Label(right, text="プロファイル名（一意な名前。例: 春日部中央_医科）").pack(anchor="w")
+        ttk.Label(right, text="プロファイル名（一意な名前。例: 〇〇病院_医科）").pack(anchor="w")
         self.profile_name_var = tk.StringVar()
         ttk.Entry(right, textvariable=self.profile_name_var).pack(fill="x", pady=4)
 

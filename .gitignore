@@ -9,7 +9,7 @@ wheels/
 # Virtual environments
 .venv
 
-# 認証情報（平文でログインID/パスワードを含む。実際に config.ini が存在。config.ini.example はテンプレートなので対象外）
+# 認証情報・個人設定（施設名などが含まれるため。ファイル自体に説明コメントが自動で入るのでテンプレート不要）
 config.ini
 .env
 
