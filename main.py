@@ -60,10 +60,20 @@ def main():
 
     only_profile = args.profile
     if args.pick:
-        picked = _pick_profile_interactively()
-        if picked is None:
-            sys.exit(1)
-        only_profile = picked or None
+        names = list_profile_names()
+        if len(names) == 0:
+            # プロファイルが無い（config.ini 未作成・空）→ 通常フローに委ねる。
+            # run_process 側の ensure_kouseikyoku_config が setup.py へ誘導する。
+            only_profile = None
+        elif len(names) == 1:
+            # プロファイルが1件だけ → 選択の必要が無いので、その1件を実行する。
+            only_profile = names[0]
+            print(f"プロファイルが「{names[0]}」の1件のみのため、これを実行します。")
+        else:
+            picked = _pick_profile_interactively()
+            if picked is None:
+                sys.exit(1)
+            only_profile = picked or None
 
     if not run_process(only_profile=only_profile, batch=args.batch):
         sys.exit(1)

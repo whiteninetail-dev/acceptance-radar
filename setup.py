@@ -3,7 +3,7 @@
 
 複数プロファイル（施設×施設種別の組み合わせ）を管理できる。
 都道府県選択 → マスターデータから bureau / pattern / url を反映し config.ini に保存。
-タスクスケジューラへの登録（上書き）に対応。
+タスクスケジューラへの登録・解除（任意）に対応。
 """
 
 from __future__ import annotations
@@ -48,12 +48,28 @@ def register_scheduled_task(start_time: str = "09:00") -> tuple[bool, str]:
     return False, (result.stderr or result.stdout or "schtasks に失敗しました。").strip()
 
 
+def unregister_scheduled_task() -> tuple[bool, str]:
+    """登録済みの定期実行タスクを解除する。"""
+    cmd = ["schtasks", "/Delete", "/TN", TASK_NAME, "/F"]
+    result = subprocess.run(cmd, capture_output=True, text=True, encoding="cp932", errors="replace")
+    if result.returncode == 0:
+        return True, f"タスク「{TASK_NAME}」の自動実行を解除しました。"
+    return False, (result.stderr or result.stdout or "schtasks に失敗しました。").strip()
+
+
+def scheduled_task_exists() -> bool:
+    """定期実行タスクが既に登録されているかを返す（チェックボックスの初期状態に使用）。"""
+    cmd = ["schtasks", "/Query", "/TN", TASK_NAME]
+    result = subprocess.run(cmd, capture_output=True, text=True, encoding="cp932", errors="replace")
+    return result.returncode == 0
+
+
 class SetupApp(tk.Tk):
     def __init__(self, from_main: bool = False):
         super().__init__()
         self.from_main = from_main
         self.title("厚生局チェック 設定（複数プロファイル対応）")
-        self.geometry("820x580")
+        self.geometry("820x660")
         self.resizable(False, False)
 
         self.profiles: list[dict] = sync_targets_from_master(load_targets(), write_back=False)
@@ -143,14 +159,30 @@ class SetupApp(tk.Tk):
             side="left", padx=(0, 8)
         )
 
-        task_frame = ttk.Frame(right)
-        task_frame.pack(fill="x")
-        ttk.Label(task_frame, text="実行時刻:").pack(side="left")
+        task_frame = ttk.LabelFrame(right, text="定期自動実行（タスクスケジューラ・任意）")
+        task_frame.pack(fill="x", pady=(4, 0))
+
+        # 既にタスクが登録済みならチェックON、未登録ならOFFで開始する
+        self.task_enabled_var = tk.BooleanVar(value=scheduled_task_exists())
+        ttk.Checkbutton(
+            task_frame,
+            text="毎日この時刻に、全プロファイルを自動でチェックする",
+            variable=self.task_enabled_var,
+        ).pack(anchor="w", padx=8, pady=(6, 0))
+
+        time_row = ttk.Frame(task_frame)
+        time_row.pack(fill="x", padx=8, pady=6)
+        ttk.Label(time_row, text="実行時刻:").pack(side="left")
         self.task_time_var = tk.StringVar(value="09:00")
-        ttk.Entry(task_frame, textvariable=self.task_time_var, width=8).pack(side="left", padx=(4, 8))
-        ttk.Button(
-            task_frame, text="タスクスケジューラ登録（全プロファイル共通・毎日実行）", command=self._register_task
-        ).pack(side="left")
+        ttk.Entry(time_row, textvariable=self.task_time_var, width=8).pack(side="left", padx=(4, 8))
+        ttk.Button(time_row, text="この自動実行の設定を適用", command=self._apply_task_setting).pack(side="left")
+
+        ttk.Label(
+            task_frame,
+            text="チェックを外して「適用」を押すと、登録済みの自動実行を解除します（登録しない運用も可）。",
+            font=("", 8),
+            wraplength=460,
+        ).pack(anchor="w", padx=8, pady=(0, 6))
 
         ttk.Button(
             right,
@@ -320,16 +352,28 @@ class SetupApp(tk.Tk):
         self._refresh_listbox(select_name=name)
         messagebox.showinfo("保存完了", f"プロファイル「{name}」を保存しました。\n{config_path()}")
 
-    def _register_task(self) -> None:
-        start_time = self.task_time_var.get().strip()
-        if not re.match(r"^([01]\d|2[0-3]):[0-5]\d$", start_time):
-            messagebox.showerror("エラー", "実行時刻は HH:MM（24時間表記）で入力してください。例: 09:00 / 21:30")
-            return
-        ok, msg = register_scheduled_task(start_time)
-        if ok:
-            messagebox.showinfo("タスク登録", f"{msg}\n実行時刻: 毎日 {start_time}")
+    def _apply_task_setting(self) -> None:
+        if self.task_enabled_var.get():
+            # チェックON → 登録（既存があれば上書き）
+            start_time = self.task_time_var.get().strip()
+            if not re.match(r"^([01]\d|2[0-3]):[0-5]\d$", start_time):
+                messagebox.showerror("エラー", "実行時刻は HH:MM（24時間表記）で入力してください。例: 09:00 / 21:30")
+                return
+            ok, msg = register_scheduled_task(start_time)
+            if ok:
+                messagebox.showinfo("自動実行の設定", f"{msg}\n実行時刻: 毎日 {start_time}")
+            else:
+                messagebox.showerror("自動実行の設定", msg)
         else:
-            messagebox.showerror("タスク登録", msg)
+            # チェックOFF → 解除。元々登録が無い場合は「解除済み」扱いにする
+            if not scheduled_task_exists():
+                messagebox.showinfo("自動実行の設定", "自動実行は登録されていません（登録しない運用のままです）。")
+                return
+            ok, msg = unregister_scheduled_task()
+            if ok:
+                messagebox.showinfo("自動実行の設定", msg)
+            else:
+                messagebox.showerror("自動実行の設定", msg)
 
     def _finish(self) -> None:
         self.destroy()
